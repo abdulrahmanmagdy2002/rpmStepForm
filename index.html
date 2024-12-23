@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Interactive Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        /* Filled Orange Rectangle */
+        .top-rectangle {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px; /* Adjust the height as needed */
+            background-color: orange; /* Filled orange background */
+            box-sizing: border-box; /* Ensure padding and border are included in the element's total width and height */
+            z-index: 1000; /* Ensure it stays on top of other elements */
+        }
+
+        /* Logo Styles */
+        .logo {
+            position: fixed;
+            top: 70px; /* 60px (height of top-rectangle) + 10px margin */
+            left: 20px; /* Adjust as needed */
+            z-index: 999; /* Below the top-rectangle */
+        }
+
+        .logo img {
+            height: 40px; /* Adjust the height as needed */
+            width: auto;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* Add padding-top to prevent content from being hidden behind the fixed rectangle and logo */
+            padding-top: 120px; /* 60px (top-rectangle) + 50px (logo area) */
+            box-sizing: border-box;
+        }
+
+        .question-container {
+            display: none;
+            margin-top: 20px;
+            text-align: left;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .question {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #444;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input[type="text"],
+        textarea,
+        select,
+        input[type="date"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        /* General Button Styles */
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            color: #ffffff; /* Ensure all button texts are white */
+            transition: background-color 0.3s ease;
+        }
+
+        /* General Hover Effect for Buttons without Specific Hover Styles */
+        button:hover:not(:disabled) {
+            /* This will only apply to buttons without specific hover styles and not disabled */
+            background-color: #f97c00;
+            color: #ffffff;
+        }
+
+        /* Specific Styles for Start Button */
+        #start-button {
+            background-color: #f7ad63;
+            width: 50%;
+        }
+
+        #start-button:hover {
+            background-color: #f97c00;
+            color: #ffffff;
+        }
+
+        /* Specific Styles for Option Buttons */
+        .option-button {
+            background-color: #f7ad63;
+        }
+
+        .option-button:hover {
+            background-color: #f97c00;
+            color: #ffffff;
+        }
+
+        /* Specific Styles for Next Button */
+        .next-button {
+            background-color: #f7ad63;
+            margin-top: 20px;
+        }
+
+        .next-button:hover {
+            background-color: #f97c00;
+            color: #ffffff;
+        }
+
+        .next-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            color: #ffffff;
+        }
+
+        /* Specific Styles for Submit Button */
+        #submit-button {
+            background-color: #f7ad63;
+            width: 50%;
+            display: none;
+            color: #ffffff;
+        }
+
+        #submit-button:hover {
+            background-color: #f97c00;
+            color: #ffffff;
+        }
+
+        .selected {
+            background-color: #f97c00 !important;
+            color: #ffffff;
+        }
+
+        #processing {
+            display: none;
+            font-size: 18px;
+            margin-top: 20px;
+            color: #555;
+        }
+
+        /* User Information Form Styles */
+        .user-info-container {
+            display: none;
+            width: 80%;
+            max-width: 500px;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .user-info-container h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #444;
+        }
+
+        .user-info-container label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .user-info-container input[type="text"],
+        .user-info-container input[type="tel"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .tcpa {
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .tcpa input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .submit-info-button {
+            background-color: #ccc; /* Initially greyed out */
+            cursor: not-allowed;
+        }
+
+        .submit-info-button.enabled {
+            background-color: #f7ad63;
+            cursor: pointer;
+        }
+
+        .submit-info-button.enabled:hover {
+            background-color: #f97c00;
+            color: #ffffff;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 600px) {
+            .logo img {
+                height: 30px; /* Smaller logo on smaller screens */
+            }
+
+            .container {
+                padding-top: 100px; /* Adjust padding if logo size changes */
+            }
+
+            .user-info-container {
+                width: 90%;
+            }
+        }
+    </style>
+    <script>
+        let currentQuestion = 0;
+        const questions = [
+            { text: "Enter the Zip Code where the injury occurred", type: "input", options: null },
+            {
+                text: "What type of accident?",
+                type: "options",
+                options: [
+                    "Car Accident",
+                    "Commercial Vehicle Accident",
+                    "Motorcycle Accident",
+                    "Rideshare Accident",
+                    "Pedestrian Accident"
+                ]
+            },
+            { text: "Select the date of the accident", type: "date", options: null },
+            {
+                text: "Was the accident your fault, or were you issued a ticket for the accident?",
+                type: "options",
+                options: [
+                    "No, it was not my fault",
+                    "Yes, it was my fault",
+                    "There was no one else there. I hit an animal/ditch/tree or had a mechanical problem."
+                ]
+            },
+            { text: "Were you physically injured?", type: "options", options: ["Yes", "No"] },
+            { text: "Does anyone involved have vehicle insurance coverage?", type: "options", options: ["Yes", "No"] },
+            { text: "Did the accident cause hospitalization, medical treatment, surgery, or missed work?", type: "options", options: ["Yes", "No"] },
+            { text: "Is an attorney helping you with your claim or has an attorney already rejected your claim?", type: "options", options: ["Yes", "No"] },
+            { text: "Describe in detail what happened in the accident and injuries you sustained", type: "textarea", options: null },
+            { text: "Enter your email", type: "input", options: null }
+        ];
+
+        // We'll store all answers here
+        const allAnswers = [];
+
+        function startForm() {
+            document.getElementById("start-button").style.display = "none";
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestion < questions.length) {
+                const questionContainer = document.querySelector(".question-container");
+                questionContainer.style.display = "block";
+
+                const questionText = document.getElementById("question-text");
+                questionText.textContent = questions[currentQuestion].text;
+
+                const optionsContainer = document.getElementById("options-container");
+                optionsContainer.innerHTML = "";
+
+                const current = questions[currentQuestion];
+
+                // Depending on question type
+                if (current.type === "options") {
+                    current.options.forEach(option => {
+                        const button = document.createElement("button");
+                        button.textContent = option;
+                        button.className = "option-button";
+                        button.onclick = () => {
+                            // Remove 'selected' from all
+                            document.querySelectorAll(".option-button").forEach(btn => {
+                                btn.classList.remove("selected");
+                            });
+                            button.classList.add("selected");
+
+                            // Save the user's answer
+                            allAnswers[currentQuestion] = option;
+
+                            nextQuestion();
+                        };
+                        optionsContainer.appendChild(button);
+                    });
+                } else if (current.type === "input") {
+                    const input = document.createElement("input");
+                    input.type = "text";
+                    input.placeholder = "Type your answer here";
+                    input.oninput = (e) => toggleNextButton(e.target.value.trim().length > 0);
+                    optionsContainer.appendChild(input);
+
+                    const nextBtn = document.createElement("button");
+                    nextBtn.textContent = "Next";
+                    nextBtn.className = "next-button";
+                    nextBtn.disabled = true;
+                    nextBtn.onclick = () => {
+                        allAnswers[currentQuestion] = input.value.trim();
+                        nextQuestion();
+                    };
+                    optionsContainer.appendChild(nextBtn);
+                } else if (current.type === "textarea") {
+                    const textarea = document.createElement("textarea");
+                    textarea.placeholder = "Type your answer here (20 character minimum)";
+                    textarea.minLength = 20;
+                    textarea.oninput = (e) => toggleNextButton(e.target.value.trim().length >= 20);
+                    optionsContainer.appendChild(textarea);
+
+                    const nextBtn = document.createElement("button");
+                    nextBtn.textContent = "Next";
+                    nextBtn.className = "next-button";
+                    nextBtn.disabled = true;
+                    nextBtn.onclick = () => {
+                        allAnswers[currentQuestion] = textarea.value.trim();
+                        nextQuestion();
+                    };
+                    optionsContainer.appendChild(nextBtn);
+                } else if (current.type === "date") {
+                    const input = document.createElement("input");
+                    input.type = "date";
+                    input.oninput = (e) => toggleNextButton(e.target.value.trim().length > 0);
+                    optionsContainer.appendChild(input);
+
+                    const nextBtn = document.createElement("button");
+                    nextBtn.textContent = "Next";
+                    nextBtn.className = "next-button";
+                    nextBtn.disabled = true;
+                    nextBtn.onclick = () => {
+                        allAnswers[currentQuestion] = input.value.trim();
+                        nextQuestion();
+                    };
+                    optionsContainer.appendChild(nextBtn);
+                }
+            } else {
+                // All questions answered
+                showProcessing();
+            }
+        }
+
+        function toggleNextButton(isEnabled) {
+            const nextBtn = document.querySelector(".next-button");
+            if (nextBtn) {
+                nextBtn.disabled = !isEnabled;
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            showQuestion();
+        }
+
+        function showProcessing() {
+            const questionContainer = document.querySelector(".question-container");
+            questionContainer.style.display = "none";
+
+            const processing = document.getElementById("processing");
+            processing.style.display = "block";
+            let counter = 5;
+
+            const interval = setInterval(() => {
+                processing.textContent = `Just a moment, we are processing your request (${counter}s)`;
+                counter--;
+
+                if (counter < 0) {
+                    clearInterval(interval);
+                    processing.style.display = "none";
+                    showUserInfoForm();
+                }
+            }, 1000);
+        }
+
+        function showUserInfoForm() {
+            const userInfoContainer = document.getElementById("user-info-container");
+            userInfoContainer.style.display = "block";
+        }
+
+        // Handle final form submission
+        function handleFormSubmit() {
+            // Put allAnswers array into hidden <input id="answers">
+            document.getElementById("answers").value = JSON.stringify(allAnswers);
+            // Form will then submit to process.php
+        }
+
+        function validateUserInfoForm() {
+            const firstName = document.getElementById("first-name").value.trim();
+            const lastName  = document.getElementById("last-name").value.trim();
+            const phone     = document.getElementById("phone").value.trim();
+            const consent   = document.getElementById("tcpa-consent").checked;
+
+            const submitButton = document.querySelector(".submit-info-button");
+
+            if (firstName !== "" && lastName !== "" && phone !== "" && consent) {
+                submitButton.disabled = false;
+                submitButton.classList.add("enabled");
+            } else {
+                submitButton.disabled = true;
+                submitButton.classList.remove("enabled");
+            }
+        }
+
+        window.onload = function() {
+            const firstNameInput  = document.getElementById("first-name");
+            const lastNameInput   = document.getElementById("last-name");
+            const phoneInput      = document.getElementById("phone");
+            const consentCheckbox = document.getElementById("tcpa-consent");
+
+            firstNameInput.addEventListener("input", validateUserInfoForm);
+            lastNameInput.addEventListener("input", validateUserInfoForm);
+            phoneInput.addEventListener("input", validateUserInfoForm);
+            consentCheckbox.addEventListener("change", validateUserInfoForm);
+        }
+    </script>
+</head>
+<body>
+    <!-- Filled Orange Rectangle -->
+    <div class="top-rectangle"></div>
+
+    <!-- Logo -->
+    <div class="logo">
+        <img src="logo.png" alt="Logo">
+    </div>
+
+    <div class="container">
+        <!--
+            We add a real form that submits to "process.php" via POST.
+            The multi-step questions are driven by JS, but the final
+            submission is handled by this form.
+        -->
+        <form id="multiStepForm" method="POST" action="process.php">
+
+            <!-- Start Button -->
+            <button type="button" id="start-button" onclick="startForm()">Start Form</button>
+
+            <!-- Question Container -->
+            <div class="question-container">
+                <div class="question" id="question-text"></div>
+                <div class="options" id="options-container"></div>
+            </div>
+
+            <!-- Processing State -->
+            <div id="processing">Just a moment, we are processing your request</div>
+
+            <!-- User Information Form -->
+            <div class="user-info-container" id="user-info-container">
+                <h2>Enter Your Information</h2>
+
+                <label for="first-name">First Name</label>
+                <input 
+                  type="text" 
+                  id="first-name" 
+                  name="firstName"
+                  placeholder="First Name"
+                >
+
+                <label for="last-name">Last Name</label>
+                <input 
+                  type="text" 
+                  id="last-name" 
+                  name="lastName"
+                  placeholder="Last Name"
+                >
+
+                <label for="phone">Phone Number</label>
+                <input 
+                  type="tel" 
+                  id="phone" 
+                  name="phone"
+                  placeholder="Phone Number" 
+                  pattern="[0-9]{10}" 
+                  title="Please enter a 10-digit phone number"
+                >
+
+                <!-- Hidden field to store multi-step answers as JSON -->
+                <input type="hidden" name="answers" id="answers">
+
+                <div class="tcpa">
+                    <input 
+                      type="checkbox" 
+                      id="tcpa-consent" 
+                      name="tcpa" 
+                      value="Yes"
+                    >
+                    <label for="tcpa-consent">
+                        By clicking ‘submit,’ I provide my ESIGN signature and expressly consent ...
+                    </label>
+                </div>
+
+                <button
+                  type="submit"
+                  class="submit-info-button"
+                  onclick="handleFormSubmit()"
+                  disabled
+                >
+                  Submit
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
